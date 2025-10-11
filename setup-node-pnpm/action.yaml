@@ -1,16 +1,44 @@
 name: Setup Node & PNPM
+
 runs:
   using: composite
   steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+
     - name: Setup PNPM
       uses: pnpm/action-setup@v4
+
     - name: Setup Node
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version-file: .node-version
-        cache: pnpm
+        package-manager-cache: false
+
+    - name: Locate PNPM Store
+      id: pnpm
+      shell: bash
+      run: echo "store-path=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - name: Restore PNPM store
+      id: restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ steps.pnpm.outputs.store-path }}
+        key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+
+    - name: Verify Lockfile
+      shell: bash
+      if: ${{ !steps.restore.outputs.cache-hit }}
+      run: pnpm install --lockfile-only --resolution-only ${{ steps.restore.outputs.cache-hit && '--offline' || '' }}
+
     - name: Install Dependencies
       shell: bash
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --frozen-lockfile ${{ steps.restore.outputs.cache-hit && '--offline' || '' }}
+
+    - name: Save PNPM store
+      uses: actions/cache/save@v4
+      if: ${{ !steps.restore.outputs.cache-hit }}
+      with:
+        path: ${{ steps.pnpm.outputs.store-path }}
+        key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
