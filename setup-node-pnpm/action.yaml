@@ -1,5 +1,11 @@
 name: Setup Node & PNPM
 
+inputs:
+  cache:
+    description: Cache the PNPM store in the GitHub Actions cache. Defaults to `true`.
+    required: false
+    default: 'true'
+
 runs:
   using: composite
   steps:
@@ -15,7 +21,7 @@ runs:
         node-version-file: .node-version
         package-manager-cache: false
 
-    - name: Locate PNPM Store
+    - name: Locate PNPM store
       id: pnpm
       shell: bash
       run: echo "store-path=$(pnpm store path)" >> $GITHUB_OUTPUT
@@ -25,12 +31,12 @@ runs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ steps.pnpm.outputs.store-path }}
-        key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+        key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
     - name: Verify Lockfile
       shell: bash
       if: ${{ !steps.restore.outputs.cache-hit }}
-      run: pnpm install --lockfile-only --resolution-only ${{ steps.restore.outputs.cache-hit && '--offline' || '' }}
+      run: pnpm install --lockfile-only --resolution-only
 
     - name: Install Dependencies
       shell: bash
@@ -38,7 +44,7 @@ runs:
 
     - name: Save PNPM store
       uses: actions/cache/save@v4
-      if: ${{ !steps.restore.outputs.cache-hit }}
+      if: ${{ inputs.cache == 'true' && !steps.restore.outputs.cache-hit }}
       with:
         path: ${{ steps.pnpm.outputs.store-path }}
-        key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+        key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
