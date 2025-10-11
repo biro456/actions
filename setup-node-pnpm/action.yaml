@@ -20,29 +20,30 @@ runs:
         node-version-file: .node-version
         package-manager-cache: false
 
-    - name: Configure PNPM
+    - name: Locate PNPM Store
+      id: pnpm
       shell: bash
-      run: pnpm config set --global storeDir ~/.pnpm/store
+      run: echo "store-path=$(pnpm store path)" >> $GITHUB_OUTPUT
 
     - name: Restore PNPM store
       id: restore
       uses: actions/cache/restore@v4
       with:
-        path: ~/.pnpm/store
+        path: ${{ steps.pnpm.outputs.store-path }}
         key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
 
     - name: Verify Lockfile
       shell: bash
-      if: ${{ inputs.save == 'true' }}
+      if: ${{ !steps.restore.outputs.cache-hit || inputs.save == 'true' }}
       run: pnpm install --lockfile-only --resolution-only ${{ steps.restore.outputs.cache-hit && '--offline' || '' }}
 
     - name: Install Dependencies
       shell: bash
-      run: pnpm install --frozen-lockfile ${{ inputs.save != 'true' && steps.restore.outputs.cache-hit && '--offline' || '' }}
+      run: pnpm install --frozen-lockfile ${{ steps.restore.outputs.cache-hit && '--offline' || '' }}
 
     - name: Save PNPM store
       uses: actions/cache/save@v4
-      if: ${{ inputs.save == 'true' && !steps.restore.outputs.cache-hit }}
+      if: ${{ !steps.restore.outputs.cache-hit || inputs.save == 'true' }}
       with:
-        path: ~/.pnpm/store
+        path: ${{ steps.pnpm.outputs.store-path }}
         key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
