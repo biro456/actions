@@ -34,11 +34,11 @@ runs:
     - name: Verify Lockfile
       shell: bash
       if: ${{ inputs.save == 'true' }}
-      run: pnpm install --lockfile-only --resolution-only
+      run: pnpm install --lockfile-only --resolution-only ${{ steps.restore.outputs.cache-hit && '--offline' || '' }}
 
     - name: Install Dependencies
       shell: bash
-      run: pnpm install --frozen-lockfile ${{ inputs.save != 'true' && '--offline' || '' }}
+      run: pnpm install --frozen-lockfile ${{ inputs.save != 'true' && steps.restore.outputs.cache-hit && '--offline' || '' }}
 
     - name: Save PNPM store
       uses: actions/cache/save@v4
