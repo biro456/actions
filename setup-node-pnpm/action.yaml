@@ -18,6 +18,7 @@ runs:
       uses: actions/setup-node@v5
       with:
         node-version-file: .node-version
+        package-manager-cache: false
 
     - name: Configure PNPM
       shell: bash
