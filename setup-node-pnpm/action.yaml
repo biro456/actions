@@ -1,16 +1,46 @@
 name: Setup Node & PNPM
+
+inputs:
+  save:
+    description: Save the PNPM store to the Cache?
+    required: false
+
 runs:
   using: composite
   steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+
     - name: Setup PNPM
       uses: pnpm/action-setup@v4
+
     - name: Setup Node
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version-file: .node-version
-        cache: pnpm
+
+    - name: Configure PNPM
+      shell: bash
+      run: pnpm config set --global storeDir ~/.pnpm/store
+
+    - name: Restore PNPM store
+      id: restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.pnpm/store
+        key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+
+    - name: Verify Lockfile
+      shell: bash
+      run: pnpm install --lockfile-only --resolution-only ${{ inputs.save != 'true' && '--offline' || '' }}
+
     - name: Install Dependencies
       shell: bash
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --frozen-lockfile ${{ inputs.save != 'true' && '--offline' || '' }}
+
+    - name: Save PNPM store
+      uses: actions/cache/save@v4
+      if: ${{ inputs.save == 'true' && !steps.restore.outputs.cache-hit }}
+      with:
+        path: ~/.pnpm/store
+        key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
