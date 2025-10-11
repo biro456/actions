@@ -1,0 +1,43 @@
+name: CI for Node & PNPM
+
+on:
+  workflow_call:
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    steps:
+    - uses: biro456/actions/setup-node-pnpm@main
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - uses: biro456/actions/setup-node-pnpm@main
+      - run: pnpm --silent build
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - uses: biro456/actions/setup-node-pnpm@main
+      - run: pnpm --silent lint
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - uses: biro456/actions/setup-node-pnpm@main
+      - run: pnpm --silent format:check
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - uses: biro456/actions/setup-node-pnpm@main
+      - run: pnpm --silent test
