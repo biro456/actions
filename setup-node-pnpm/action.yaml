@@ -33,7 +33,8 @@ runs:
 
     - name: Verify Lockfile
       shell: bash
-      run: pnpm install --lockfile-only --resolution-only ${{ inputs.save != 'true' && '--offline' || '' }}
+      if: ${{ inputs.save == 'true' }}
+      run: pnpm install --lockfile-only --resolution-only
 
     - name: Install Dependencies
       shell: bash
