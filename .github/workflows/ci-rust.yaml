@@ -1,0 +1,35 @@
+name: CI for Rust
+
+on:
+  workflow_call:
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Setup Nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+
+      - name: Format
+        uses: actions-rust-lang/rustfmt@v1
+
+      # TODO: report format
+
+      - name: Check
+        run: cargo check
+
+      # TODO: report check
+
+      - name: Test
+        run: cargo nextest run
+
+      # TODO: report test
