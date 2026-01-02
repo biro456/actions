@@ -30,6 +30,6 @@ jobs:
       # TODO: report check
 
       - name: Test
-        run: cargo nextest run
+        run: cargo nextest run --no-tests warn
 
       # TODO: report test
