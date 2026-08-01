@@ -2,24 +2,39 @@ name: CI for Rust
 
 on:
   workflow_call:
+    inputs:
+      runner:
+        type: string
+        required: false
+        default: ubuntu-latest
+      cache:
+        type: boolean
+        required: false
+        default: true
+      format:
+        type: boolean
+        required: false
+        default: true
+      test:
+        type: boolean
+        required: false
+        default: true
 
 jobs:
   ci:
     name: CI
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
-
-      - name: Setup Nextest
-        uses: taiki-e/install-action@v2
         with:
-          tool: nextest
+          cache: ${{ inputs.cache }}
 
       - name: Format
+        if: ${{ inputs.format }}
         uses: actions-rust-lang/rustfmt@v1
 
       # TODO: report format
@@ -29,7 +44,14 @@ jobs:
 
       # TODO: report check
 
+      - name: Setup Nextest
+        if: ${{ inputs.test }}
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+
       - name: Test
+        if: ${{ inputs.test }}
         run: cargo nextest run --no-tests warn
 
       # TODO: report test
